@@ -1,0 +1,203 @@
+/**
+ * suggestionDialog
+ * 查询窗口插件
+ * author: willli
+ * company: tv.sohu.com
+ * version: 1.0.0
+ */
+
+(function($){
+	$.fn.suggestionDialog = function(options){
+		
+		//default parameters
+		var defaults={
+			title: '查询',
+			searchTip:'客户名称',
+			searchField:'name',
+			targetField:null,
+			hiddenField:null,
+			url:'',
+			colModel:[],
+			postData:{},
+		    onSelectRow:function(id, rowData, responseData){},
+		    onClear:function(){}
+		};
+		var params = $.extend(defaults,options);
+		
+		//render jqGrid to table
+		var bindGrid = function(elem){
+			
+			var responseData = null;
+			
+			// add parameter to jqGrid query parameters from trigger button attribute real-timely.
+			// eg: <span id='search-dialog-contact' filter='customerId:1102,customerName:volkswagen'>
+			var mergedPostData ={};
+			$.extend(mergedPostData, params.postData);
+			var filter = elem.attr('filter');
+			if(filter != undefined && filter != null && filter != ''){
+				try{
+					var filterArr = filter.split(',');
+					var queryParam={};
+					for ( var i = 0; i < filterArr.length; i++) {
+						var key = filterArr[i].split(':')[0];
+						var value = filterArr[i].split(':')[1];
+						queryParam[key] = value;
+					}
+					$.extend(mergedPostData, queryParam);
+				}catch(e){
+					console.log(e);
+				}
+			}
+			$('#search-result').jqGrid({
+				url:params.url,
+				datatype : "json",
+				height : "230px",
+				autowidth: true,
+				prmNames:{
+					page:"page",
+					rows:"pageSize",
+					sort:"orderBy",
+					order:"order"
+				},
+				jsonReader: { 
+					repeatitems: false,root:"rows"
+				} ,
+				colModel:params.colModel,
+				rowNum:10,
+				loadonce : false,
+				mtype : "POST",
+				gridview : true,
+				pager : '#pager',
+				viewrecords : true,
+				postData:mergedPostData,
+				loadComplete:function(data){
+					responseData = data;
+				},
+				onSelectRow: function(id){
+					params.hiddenField.val(id);
+					params.targetField.val($('#search-result').jqGrid('getRowData', id).name);
+					params.targetField.trigger('blur');
+					$("#search-dialog").dialog('close');
+					var rowData;
+					$.each(responseData.rows,function(i,item){
+						if(item.id == id){
+							rowData = item;
+							return false;
+						}
+					});
+					params.onSelectRow(id, rowData, responseData);
+				}
+			});
+			
+		};
+		
+		//create jqGrid table, pager
+		var createGridDiv = function(){
+			$('#search-result-pack').remove();
+			var div = $('<div id="search-result-pack"><table id="search-result"></table><div id="pager"></div></div>');
+			$('#search-dialog').append(div);
+		};
+		
+		var refreshSearcher = function(){
+			$('#search-param').val(params.searchTip);
+			
+			$('#search-param').unbind('keypress').bind('keypress', function(event){
+				if(event.keyCode==13){
+					$('#search-button').trigger('click');
+				}
+			});
+			
+			$('#search-param').unbind('click').bind('click', function(){
+				$('#search-param').val() == params.searchTip && $('#search-param').val('');
+			});
+			
+			$('#search-param').unbind('blur').bind('blur', function(){
+				if(!$('#search-param').val()){
+					$('#search-param').val(params.searchTip);
+				}
+			});
+		};
+		
+		//initial dialog
+		var init = function(){
+			
+			//initial params
+			params.postData[params.searchField] = function(){
+				var paramValue=$('#search-param').val();
+				if(paramValue!=params.searchTip) return paramValue;
+				return '';
+			};
+			
+			//create dialog div
+			if($('#search-dialog').size() < 1){
+				var dialogDiv = $('<div id="search-dialog" style="display: none;">'
+						+'<div class="search">'
+						+'<input type="button" id="clear-button" value="清空" class="search-dialog-btn1"/>'
+						+'<input type="text" id="search-param" name="search-param" class="in" />'
+						+'<input type="button" id="search-button" value="查询" class="search-dialog-btn1"/>'
+						+'</div>'
+						+'</div>');
+				$('body').append(dialogDiv);
+			}
+			
+			//render dialog
+			$('#search-dialog').dialog({
+				show: '',
+				width: 'auto',
+				draggable:false,
+				resizable:false,
+				title: '查询',
+				autoOpen: false,
+				  modal: true
+			});
+			
+		};
+		init();
+		
+		//added by haixinhuang:将清空函数暴露出去
+		//清空按钮的事件回调
+		var clear = function(){
+			params.targetField.val('');
+			params.hiddenField.val('');
+			params.onClear();
+			$('#search-dialog').dialog('close');
+		};
+		
+		window.suggest_dialog = function(){
+			if (typeof params.targetField == "function") {
+				params.targetField = params.targetField($(this));
+				params.hiddenField = params.hiddenField($(this));
+			}
+			refreshSearcher();
+      
+			createGridDiv();
+      
+			bindGrid($(this));
+      
+			//bind search button
+			$('#search-button').unbind('click').bind('click',function(){
+				$('#search-result').trigger('reloadGrid');
+			});
+      
+			//clear fields
+			$('#clear-button').unbind('click').bind('click', clear);
+      
+			//open dialog
+			if($('#search-dialog').dialog('isOpen')){
+				$('#search-dialog').dialog('close');
+			}
+			//计算位置
+			$('#search-dialog').dialog("option","position",[$(window).width()/2 - 652/2-175/2,$(window).scrollTop() + $(window).height() / 2 - 383/2-65/2]);
+			$('#search-dialog').dialog('option', 'title', params.title);
+			$('#search-dialog').dialog('open');
+		};
+		
+		//bind click event
+		$(this).unbind('click').bind('click',suggest_dialog);
+		
+		return {
+			clear : clear 
+		};
+	};
+    
+})(jQuery);

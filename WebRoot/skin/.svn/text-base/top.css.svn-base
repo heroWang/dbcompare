@@ -1,0 +1,30 @@
+body{background:#fff;}
+#header{background:url(images/bg-1.png) repeat-x 0 -40px;height:60px;}
+#header .logo{padding:9px 0 0 25px;width:325px;position:relative;z-index:2;}
+#header .logo .s1{border-right:2px solid #e0e0e0;padding:0 20px 0 0;margin-right:15px;}
+#header .login{padding:5px 20px 0 0;height:23px;text-align:right;word-spacing:7px;}
+#header .colR{width:100%;margin-left:-350px;}
+
+/* ico & btn */
+.msg-red,
+.msg-red span,
+.msg-grey,
+.msg-grey span{background:url(images/ico-3.png) no-repeat;display:inline-block;height:22px;line-height:22px;color:#fff;font-weight:bold;}
+.msg-red span{background-position:right -29px;padding:0 8px;}
+.msg-grey{background-position:0 -60px;}
+.msg-grey span{background-position:right -90px;padding:0 8px;}
+
+/* nav */
+.nav{height:32px;font-size:14px;border-left:1px solid #dadada;margin-left:350px;}
+.nav li{float:left;background:#fcfcfc;line-height:30px;cursor:pointer;border-right:1px solid #dadada;border-top:1px solid #dadada;}
+.nav li:hover{background:#fff;}
+.nav li a{display:block;padding:0 17px;}
+.nav li a:hover{text-decoration:none;}
+.nav .current,
+.nav .current a,
+.nav .current:hover{background:url(images/bg-4.png) no-repeat;}
+.nav .current,
+.nav .current:hover{background-color:#fff;font-weight:bold;height:30px;position:relative;border-top:2px solid #db2028;line-height:29px;}
+.nav .current a{background-position:right -43px;}
+.nav .current a:hover{color:#3a3a3a;}
+

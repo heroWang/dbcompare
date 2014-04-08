@@ -1,0 +1,118 @@
+@CHARSET "UTF-8";
+
+
+.setting{
+    background: none repeat scroll 0 0 #E9EEF2;
+    border-bottom-right-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-left-radius: 5px;
+    padding-left:0px;
+    padding-right:21px;
+    height: 344px;
+    width: 712px;
+    display:none
+}
+.setting .title{
+	float: left;
+	font-size:9px;
+	margin-left:4px;
+    margin-top: 2px;
+    margin-bottom:-20px
+}
+.setting form{
+	    clear:both;
+	padding: 23px 0 0 23px;
+    position: relative;
+    margin-bottom:30px;
+}
+.setting .item{
+	margin-bottom:10px;
+}
+.setting input{
+	border: 1px solid #CCCCCC;
+    padding: 3px 2px;
+    width: 200px;
+}
+
+
+/******button 居中******/
+
+.setting .btns{
+	padding-top:32px;
+	margin-left:206px;
+	width:300px;
+}
+.setting .bn-submit {
+    background: url("douban_logo.png") no-repeat scroll -23px -48px transparent;
+    border: 0 none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 14px;
+    height: 28px;
+    line-height: 28px;
+    padding-bottom: 3px;
+    width: 80px;
+}
+
+
+.setting .item1 {
+    color: #666666;
+    font-size: 12px;
+    margin: 0 20px 10px 0;
+}
+
+
+.setting #include-tables{
+	flat:left;
+	clear:both;
+	margin:0px;
+	padding-top:20px;
+	padding-bottom:0px;
+	padding-right:0px;
+}
+.setting label {
+    color: #333333;
+    float: left;
+    padding: 3px;
+    width:50px
+}
+#include-tables label{
+	width:80px;
+}
+#include-tables input{
+	width:500px;
+}
+
+body, div, dl, dt, dd, ul, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, button, textarea, blockquote {
+    margin: 0;
+    padding: 0;
+}
+body, td, th {
+    font: 12px/1.62 Helvetica,Arial,sans-serif;
+}
+html {
+    color: #111111;
+}
+label{
+	font-family: Tahoma;
+    vertical-align: middle;
+}
+input{
+	margin-right: 3px;
+    vertical-align: middle;
+    font-size:12px;
+}
+input, button, textarea, select, optgroup, option {
+    font-family: inherit;
+    font-size: inherit;
+    font-style: inherit;
+    font-weight: inherit;
+}
+fieldset{
+	margin:0px;
+	padding:0px;
+}
+legend{
+	margin-bottom:20px
+}

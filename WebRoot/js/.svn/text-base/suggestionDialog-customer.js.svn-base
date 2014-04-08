@@ -1,0 +1,190 @@
+/**
+ * suggestionDialog
+ * 查询窗口插件
+ * author: willli
+ * company: tv.sohu.com
+ * version: 1.0.0
+ */
+
+(function($){
+    var dialogDiv;
+	//客户查询dialog
+	$.extend($.fn,{
+		customerDialog : function(opt) {
+			var defaults = {
+				title:'选择客户',
+				searchTip:'输入查询条件',
+				searchField:'name',
+				targetField:null,
+				hiddenField:null,
+				customerTypeField:null,		//页面表单中的客户类型字段，选择客户类型radio是修改此元素的值
+				url:'/customer/straightcustomer/list.json',
+				straightCustomerUrl:'/customer/straightcustomer/list.json',
+				agentUrl:'/customer/agent/list.json',
+				colModel:[
+					{label:'客户全称',name:'name',align:'center'},
+					{label:'区域',name:'areaStr',index:'area',align:'center'},
+					{label:'省份',name:'provinceStr',index:'province',align:'center'}
+				],
+				postData:{},
+				onSelectRow:function(id, rowData, responseData){},
+				onClear:function(){}
+			};
+			
+			var params = $.extend(defaults,opt);
+			function createGridDiv() {
+				$('#search-result-pack').remove();
+				var div = $('<div id="search-result-pack"><table id="search-result"></table><div id="pager"></div></div>');
+				$('#customer-dialog').append(div);
+			};
+			
+			function refreshSearcher() {
+				$('#customer-search-param').val(params.searchTip);
+				$('#customer-search-param').unbind('keypress').bind('keypress', function(event){
+					if(event.keyCode==13){
+						$('#customer-search-button').trigger('click');
+					}
+				});
+				$('#customer-search-param').unbind('click').bind('click', function(){
+                    $('#customer-search-param').val() == params.searchTip && $('#customer-search-param').val('');
+				});
+				$('#customer-search-param').unbind('blur').bind('blur', function(){
+					if(!$('#customer-search-param').val()){
+						$('#customer-search-param').val(params.searchTip);
+					}
+				});
+			};
+			
+			function bindGrid(elem){
+				var responseData = null;
+				var mergedPostData ={};
+				$.extend(mergedPostData, params.postData);
+				var filter = elem.attr('filter');
+				if(filter != undefined && filter != null && filter != ''){
+					try{
+						var filterArr = filter.split(',');
+						var queryParam={};
+						for ( var i = 0; i < filterArr.length; i++) {
+							var key = filterArr[i].split(':')[0];
+							var value = filterArr[i].split(':')[1];
+							queryParam[key] = value;
+						}
+						$.extend(mergedPostData, queryParam);
+					}catch(e){
+						console.log(e);
+					}
+				}
+				$('#search-result').jqGrid({
+					url:(params.url=='')?params.straightCustomerUrl:params.url,
+					datatype : "json",
+					height : "auto",
+					autoWidth: true,
+					prmNames:{
+						page:"page",
+						rows:"pageSize",
+						sort:"orderBy",
+						order:"order"
+					},
+					jsonReader: { 
+						repeatitems: false,root:"rows"
+					},
+					colModel:params.colModel,
+					rowNum:10,
+					loadonce: false,
+					mtype: "POST",
+					gridview: true,
+					pager: '#pager',
+					viewrecords: true,
+					postData:mergedPostData,
+					loadComplete:function(data){
+						responseData = data;
+					},
+					onSelectRow: function(id){
+                        params.selectUser && params.selectUser.apply(this, [$('#search-result').jqGrid('getRowData', id), id]);
+						params.hiddenField.val(id);
+						params.targetField.val($('#search-result').jqGrid('getRowData', id).name);
+						params.customerTypeField.val($("#customer-type-div>input:checked").val());
+						params.targetField.trigger('blur');
+						$("#customer-dialog").dialog('close');
+						params.onSelectRow(id, $('#search-result').jqGrid('getRowData', id), responseData);
+					}
+				});
+			};
+			
+			function bindSearch() {
+				// bind search button
+				$('#customer-search-button').unbind('click').bind('click',function(){
+					$('#search-result').trigger('reloadGrid');
+				});
+				//clear fields
+				$('#customer-clear-button').unbind('click').bind('click', function(){
+					params.targetField.val('');
+					params.hiddenField.val('');
+					params.onClear();
+					$('#customer-dialog').dialog('close');
+				});
+				//open dialog
+				if($('#customer-dialog').dialog('isOpen')){
+					$('#customer-dialog').dialog('close');
+				}
+				$('#customer-dialog').dialog("option","position",[$(window).width()/2 - 652/2-175/2,$(window).scrollTop() + $(window).height() / 2 - 383/2-65/2]);
+				$('#customer-dialog').dialog('option', 'title', params.title);
+				$('#customer-dialog').dialog('open');
+			}
+			//initial params
+			params.postData[params.searchField] = function(){
+				var paramValue=$('#customer-search-param').val();
+				if(paramValue!=params.searchTip) return paramValue;
+				return '';
+			};
+			//create dialog div
+			if($('#customer-dialog').size() < 1){
+				  dialogDiv = $('<div id="customer-dialog" style="display: none;">'
+						+'<div class="search">'
+						+'<input type="button" id="customer-clear-button" value="清空" class="search-dialog-btn1"/>'
+						+'<input type="text" id="customer-search-param" name="customer-search-param" class="in" />'
+						+'<input type="button" id="customer-search-button" value="查询" class="search-dialog-btn1"/>'
+						+'</div>'
+						+'<div id="customer-type-div" style="margin-bottom:10px;">'
+						+'<input type="radio" id="straightCustomerRadio" name="cusType" value="1" checked="checked"/><label for="straightCustomerRadio" class="c-grey1 mR10" style="vertical-align:middle;">直客</label>'
+						+'<input type="radio" id="agentRadio" name="cusType" value="2"/><label for="agentRadio" class="c-grey1" style="vertical-align:middle;">渠道</label>'
+						+'</div>'
+						+'</div>');
+				$('body').append(dialogDiv);
+			}
+			//render dialog
+			$('#customer-dialog').dialog({
+				show: '',
+				width: 'auto',
+				height : 405,
+				title: '查询',
+				autoOpen: false
+			});
+			$(this).click(function(){
+				if (typeof params.targetField == "function") {
+					params.targetField = params.targetField($(this));
+					params.hiddenField = params.hiddenField($(this));
+				}
+				refreshSearcher();
+				createGridDiv();
+				bindGrid($(this));
+				bindSearch();
+				$("#customer-type-div>input").live("change",function(){
+					if ($(this).val()=="1") {
+						params.url = params.straightCustomerUrl;
+					}
+					else {
+						params.url = params.agentUrl;
+					}
+					$('#search-result').setGridParam({url:params.url}).trigger("reloadGrid");
+				});
+                if (params.customerType == 'straight') {
+                    $(dialogDiv).find('#straightCustomerRadio').prop('checked', true);
+                } else if (params.customerType == 'agent') {
+                    $(dialogDiv).find('#agentRadio').prop('checked', true);
+                }
+				//radio事件
+			});
+		}
+	});
+})(jQuery);

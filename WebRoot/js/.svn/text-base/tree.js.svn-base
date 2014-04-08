@@ -1,0 +1,58 @@
+(function($) {
+	var CommonTree = function(input,options) {
+		this.resultids = {};
+		this.resulttitle = {};
+		this.url = options.url;
+		this.callback=options.callback;
+		var ts = $(input);
+		var me = this;
+		var defaults = {
+			checkbox : true,
+			classNames : {
+				checkbox : 'dynatree-radio'
+			},
+			initAjax : {
+				url : this.url
+			},
+//			autoCollapse: false,
+			selectMode : 1,
+//			autoFocus : false,
+			onSelect : function(select, node) {
+//				node.expand(true);
+                $('#add-wrap').css({
+                    top: $(node.li).offset().top,
+                    left: $(node.span).offset().left + 300
+                }).show();
+				var selKeys = $.map(node.tree.getSelectedNodes(),
+						function(node) {
+							return node.data.key;
+						});
+				me.resultids = selKeys;
+				var selTitles = $.map(node.tree.getSelectedNodes(), function(
+						node) {
+					return node.data.title;
+				});
+				me.resulttitle = selTitles;
+			},
+			onActivate : function(node) {
+				node.select();
+		  }
+		};
+		var params = $.extend(defaults, options);
+		var init = function() {
+			$(ts).dynatree(params);
+		};
+		init();
+	};
+	CommonTree.prototype = {
+		getSelectIds : function() {
+			return this.resultids;
+		},
+		getSelectTitles : function() {
+			return this.resulttitle;
+		}
+	};
+	$.fn.CommonTree = function(options) {
+		return new CommonTree(this,options);
+	};
+})(jQuery);

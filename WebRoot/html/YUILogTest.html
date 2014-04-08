@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YUI-test-Log</title>
+    <script src="http://yui.yahooapis.com/3.10.3/build/yui/yui-min.js"></script>
+    <style scoped>
+        #basic, #add_to_bottom {
+            margin-bottom: 1em;
+        }
+
+        #demo .yui3-console .yui3-console-title {
+            border: 0 none;
+            color: #000;
+            font-size: 13px;
+            font-weight: bold;
+            margin: 0;
+            text-transform: none;
+        }
+        #demo .yui3-console .yui3-console-entry-meta {
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="yui3-skin-sam">
+    <h4>Basic Console</h4>
+    <div id="basic"></div>
+    <p>
+        <button type="button" id="toggle_basic">hide console</button>
+    </p>
+
+    <h4>New messages Added to Bottom</h4>
+    <div id="add_to_bottom"></div>
+    <p>
+        <button type="button" id="toggle_atb">show console</button>
+    </p>
+
+    <h4>Custom Strings</h4>
+    <p><em>Rendered in default location(top right corner of page)</em></p>
+    <p>
+        <button type="button" id="toggle_cstrings">show console</button>
+    </p>
+
+    <script type="text/javascript">
+        //Create YUI instance and request the console module and its dependencies
+        YUI().use("console","console-filters","dd-plugin",function(Y){
+            //Create and render the three Console instances
+            var basic,newOnBottom,customStrings;
+
+            basic =new Y.Console({
+                 style:"block" //keeps the Console in the page flow as a block element
+            }).render("#basic");
+
+            newOnBottom=new Y.Console({
+                style:'inline',// keeps the Console in the page flow as an inline element
+                newestOnTop:false,
+                visible:false //hidden at instantiation
+            }).render("#add_to_bottom");
+
+            customStrings=new Y.Console({
+                       strings:{
+                           title:'Console with custom strings!',
+                           pause:'Wait',
+                           clear:'Flush',
+                           collapse:'Shrink',
+                           expand:'Grow'
+                       },
+                visible:false//hidden at instantiation
+            }).plug(Y.Plugin.ConsoleFilters)
+                    .plug(Y.Plugin.Drag,{handles:['.yui3-console-hd']})
+                    .render();
+
+
+            //set up the button listeners
+            function toggle(e,cnsl){
+                if(cnsl.get('visible')){
+                        cnsl.hide();
+                        this.set('innerHTML','show console');
+                    }else{
+                        cnsl.show();
+                        this.set('innerHTML','hide console');
+                    }
+                }
+
+
+            //Pass the corresponding Console instance to the handler as a second arg
+            Y.on('click',toggle,'#toggle_basic',null,basic);
+            Y.on('click',toggle,'#toggle_atb',null,newOnBottom);
+            Y.on('click',toggle,'#toggle_cstrings',null,customStrings);
+        });
+
+    </script>
+</body>
+</html>

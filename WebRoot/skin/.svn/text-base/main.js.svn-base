@@ -1,0 +1,94 @@
+$(document).ready(function(){
+	mover();
+	fold("#fold1");
+	fold("#fold2");
+	leftNav(".leftNav");
+	side("#side");
+	tab("#tab1","click");
+});
+
+function mover(){
+	var obj = $(".bgChange tr");
+	$("obj:even").addClass("tr1");
+	obj.mouseover(function(){
+		$(this).addClass("tr2");
+	});
+	obj.mouseout(function(){
+		$(this).removeClass("tr2");
+	});
+};
+
+
+function fold(obj){
+	var icodt = $(obj).find("dt .ico-state");
+	var icoh3 = $(obj).find("h3 .ico-state");
+	var icoh2 = $(obj).find("h2 .ico-state");
+	icodt.toggle(function(){
+		$(this).parent().attr("class","").attr("class","s-open");
+		$(this).parent().next("dd").show();
+	},function(){
+		$(this).parent().attr("class","").attr("class","s-close");
+		$(this).parent().next("dd").hide();
+	});
+	icoh3.toggle(function(){
+		$(this).parent().attr("class","").attr("class","s-close");
+		$(this).parent().next("dl").hide();
+	},function(){
+		$(this).parent().attr("class","").attr("class","s-open");
+		$(this).parent().next("dl").show();
+	});
+	icoh2.toggle(function(){
+		$(this).parent().attr("class","").attr("class","s-close");
+		$(this).parent().next("ul").hide();
+	},function(){
+		$(this).parent().attr("class","").attr("class","s-open");
+		$(this).parent().next("ul").show();
+	});
+}
+
+
+
+/* leftNav */
+/*function leftNav(obj){
+	var ico = $(obj).find(".btn-add");
+	var zkai = $(obj).find(".zkai");
+	$(zkai).next("dd").show();
+	$(zkai).find(".btn-add").removeClass("btn-add").addClass("btn-plus");
+	  ico.toggle(function(){
+		  $(this).removeClass("btn-add").addClass("btn-plus");
+		  $(this).parent().parent().addClass("zkai");
+		  $(this).parent().parent().next("dd").show();
+	  },function(){
+		  $(this).removeClass("btn-plus").addClass("btn-add");
+		  $(this).parent().parent().removeClass("zkai");
+		  $(this).parent().parent().next("dd").hide();
+	  });
+}*/
+
+
+
+/*function side(obj){
+	var arrow = $(obj).find(".btn-arrowR");
+	var leftNav = $(obj).find(".leftNav");
+	$(arrow).toggle(function(){
+		$(this).attr("class","").attr("class","btn-arrowL");
+		$(obj).parent().parent().addClass("unside");
+	},function(){
+		$(this).attr("class","").attr("class","btn-arrowR");
+		$(obj).parent().parent().removeClass("unside");
+	});
+}
+*/
+
+/* tab */
+function tab(obj,evt){
+	var menu = $(obj).find(".tab li");
+	var cont = $(obj).find(".tabTxt");
+	cont.hide().eq(0).show();
+	menu.eq(0).addClass("active");
+	menu.bind(evt,function(){
+		var n = menu.index($(this));
+		menu.removeClass("active").eq(n).addClass("active");
+		cont.hide().eq(n).show();
+	});
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<config>
+    <source>
+        <user>ads_dev</user>
+        <password>ads_dev</password>
+        <address>10.10.53.174</address>
+        <port>3306</port>
+        <dbname>ads_dev</dbname>
+    </source>
+    <target>
+        <user>ads_test</user>
+        <password>ads_test</password>
+        <address>10.10.53.174</address>
+        <port>3306</port>
+        <dbname>ads_test</dbname>
+    </target>
+    <include-tables>crm_invoice</include-tables>
+</config>

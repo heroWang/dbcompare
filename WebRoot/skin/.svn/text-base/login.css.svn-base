@@ -1,0 +1,16 @@
+body{background:url(images/bg-8.png) repeat;}
+
+.main{margin:0 auto;width:450px;}
+
+.btn-log{background:url(images/btn-2.png) no-repeat;width:100px;height:40px;border:0;cursor:pointer;vertical-align:middle;}
+
+.logTop{background:url(images/crm.png) no-repeat center top;height:24px;margin:100px 0 40px;padding:40px 0 0;}
+.logTop h1{font:25px/30px "Microsoft Yahei";color:#fff;text-align:center;}
+.logBox{background:url(images/log-1-png24.png) repeat;padding:25px 30px;color:#584d4d;margin:5px 0 0;border:3px solid #ddd;}
+.logBox h2{font:18px/20px "Microsoft Yahei";margin:0 0 15px;}
+.logBox .in{border:1px solid #b3b3b3;height:46px;line-height:46px;padding:0 0 0 60px;width:320px;font-size:14px;color:#acaaaa;}
+.logBox .in1{background:#fff url(images/log-1.png) no-repeat;}
+.logBox .in2{background:#fff url(images/log-2.png) no-repeat;}
+.logBox p{margin:0 0 20px;}
+
+.join{background:url(images/ico-join.png) no-repeat;padding:3px 0 3px 23px;color:#fff;}

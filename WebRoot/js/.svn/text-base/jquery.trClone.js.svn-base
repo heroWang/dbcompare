@@ -1,0 +1,34 @@
+/**
+ * @author xinsong
+ */
+$.fn.trClone = function (args) {
+    var tr = this,ico,hidden,
+        new_tr = $("<tr class='new_tr'></tr>"),
+        last_tr = last_new_tr(tr),
+        defaults = {
+            addClass: "ico-add1",
+            deleteClass: "ico-delete",
+            callback: $.noop,
+            hasTitle: true
+        };
+    function last_new_tr(tr) {
+        if (tr.next().hasClass("new_tr")) {
+            return last_new_tr(tr.next());
+        }
+        else {
+            return tr;
+        }
+    }
+    args = $.extend(defaults, args);
+    last_tr.after(new_tr.append(
+    	last_tr.find("td").clone().each(function (i) {
+            args.hasTitle && (i == 0 && $(this).text(""));
+            ico = $(this).find("." + args.addClass);
+            ico.length && ico.attr("class",args.deleteClass);
+        })
+    ));
+    args.callback(new_tr);
+    new_tr.find("." + args.deleteClass).bind("click",function () {
+      $(this).parents("tr").eq(0).remove();
+    });
+};

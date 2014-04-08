@@ -1,0 +1,230 @@
+/**
+ * suggestionDialog
+ * 查询窗口插件
+ * author: willli
+ * company: tv.sohu.com
+ * version: 1.0.0
+ */
+
+(function($){
+	$.fn.collectionSuggestionDialog = function(options){
+		
+		//default parameters
+		var defaults={
+			title: '查询',
+			searchTip:'输入查询条件',
+			searchField:'name',
+			targetField:null,
+			hiddenField:null,
+			targetPrefix:null,
+			projectUrl:'',
+			contractUrl:'',
+			colModel:[],
+			postData:{},
+			tableName:'list',
+		    onSelectRow:function(id, rowData, responseData){},
+		    onClear:function(){}
+		};
+		var params = $.extend(defaults,options);
+		
+		//render jqGrid to table
+		var bindGrid = function(elem){
+			
+			var responseData = null;
+			
+			// add parameter to jqGrid query parameters from trigger button attribute real-timely.
+			// eg: <span id='search-dialog-contact' filter='customerId:1102,customerName:volkswagen'>
+			var mergedPostData ={};
+			$.extend(mergedPostData, params.postData);
+			var filter = elem.attr('filter');
+			if(filter != undefined && filter != null && filter != ''){
+				try{
+					var filterArr = filter.split(',');
+					var queryParam={};
+					for ( var i = 0; i < filterArr.length; i++) {
+						var key = filterArr[i].split(':')[0];
+						var value = filterArr[i].split(':')[1];
+						queryParam[key] = value;
+					}
+					$.extend(mergedPostData, queryParam);
+				}catch(e){
+					console.log(e);
+				}
+			}
+			
+			
+			$('#search-result-collection').jqGrid({
+				url:params.projectUrl,
+				datatype : "json",
+				height : 255,
+				autowidth: true,
+				prmNames:{
+					page:"page",
+					rows:"pageSize",
+					sort:"orderBy",
+					order:"order"
+				},
+				jsonReader: { 
+					repeatitems: false,root:"rows"
+				} ,
+				colModel:params.colModel,
+				rowNum:5,
+				loadonce : false,
+				mtype : "POST",
+				gridview : true,
+				pager : '#pager-collection',
+				viewrecords : true,
+				postData:{
+					number:function(){
+						return $('#number-collection').val()
+					},
+					straightCustomerName:function(){
+						return $('#straightCustomerName-collection').val()
+					},
+					agentName:function(){
+						return $('#agentName-collection').val()
+					}
+				},
+				loadComplete:function(data){
+					responseData = data;
+				},
+				onSelectRow: function(id){
+					var selectedValue=$('#switch-collection').children('option:selected').val();
+					var ck = true;
+					$("input.in1.numbers"+"."+params.tableName).each(function(index,element) {
+						var number = $(element).val();
+						if($('#search-result-collection').jqGrid('getRowData', id).number==number) {
+							alert("同一个执行单或合同不允许在同一个收款明细下认多次款！");
+							ck = false;
+						}
+					});
+					if(selectedValue=='执行单') {
+						if(ck==true) {
+							$('#contractnum'+params.targetPrefix).val('');
+							$('#crmContractId'+params.targetPrefix).val('');
+							$('#contractnum'+params.targetPrefix).hide();
+							$('#number'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).number);
+							$('#tProjectId'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).id);
+							$('#number'+params.targetPrefix).show();
+							$('#collectionTypeName'+params.targetPrefix).val('普通认款');
+							$('#collectionType'+params.targetPrefix).val('1');
+							$('#collectionTypeSelect'+params.targetPrefix).val('1');
+							$('#documentType'+params.targetPrefix).val('1');
+							$('#salename'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).straightSaleName);
+							$('#saleid'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).straightSaleId);
+							$('#ditchname'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).channelSaleName);
+							$('#ditchid'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).channelSaleId);
+							$('#price'+params.targetPrefix).text($('#search-result-collection').jqGrid('getRowData', id).totalPrice);
+							$('#canPrice'+params.targetPrefix).text($('#search-result-collection').jqGrid('getRowData', id).totalPrice-$('#search-result-collection').jqGrid('getRowData', id).hasCollectionPrice);
+							$('#collectionPrice'+params.targetPrefix).focus();
+						}
+						
+					} else {
+						if(ck==true) {
+							$('#contractnum'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).number);
+							$('#crmContractId'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).id);
+							$('#contractnum'+params.targetPrefix).show();
+							$('#number'+params.targetPrefix).val('');
+							$('#tProjectId'+params.targetPrefix).val('');
+							$('#number'+params.targetPrefix).hide();
+							$('#collectionTypeName'+params.targetPrefix).val('保证金');
+							$('#collectionType'+params.targetPrefix).val('2');
+							$('#collectionTypeSelect'+params.targetPrefix).val('2');
+							$('#documentType'+params.targetPrefix).val('2');
+							$('#salename'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).straightSaleName);
+							$('#saleid'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).straightSaleId);
+							$('#ditchname'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).channelSaleName);
+							$('#ditchid'+params.targetPrefix).val($('#search-result-collection').jqGrid('getRowData', id).channelSaleId);
+							$('#price'+params.targetPrefix).text($('#search-result-collection').jqGrid('getRowData', id).totalPrice);
+							$('#canPrice'+params.targetPrefix).text('');
+							$('#collectionPrice'+params.targetPrefix).focus();
+						}
+					}
+					if(ck==true) {
+						$("#search-dialog-collection").dialog('close');
+						params.onSelectRow(id, $('#search-result-collection').jqGrid('getRowData', id), responseData);
+					}
+				}
+			});
+			
+		};
+		
+		//create jqGrid table, pager
+		var createGridDiv = function(){
+			$('#search-result-pack-collection').remove();
+			var div = $('<div id="search-result-pack-collection"><table id="search-result-collection"></table><div id="pager-collection"></div></div>');
+			$('#search-dialog-collection').append(div);
+		};
+		
+		//initial dialog
+		var init = function(){
+			
+			//create dialog div
+			if($('#search-dialog-collection').size() < 1){
+				var dialogDiv = $('<div id="search-dialog-collection" style="display: none;">'
+						+'<table style="width: 100%; border: 0;">'
+						+'<tr>'
+						+'<td style="width: 65px;">认款对象：</td>'
+						+'<td style="width: 145px;"><select id="switch-collection" class="in1" style="width: 140px;padding: 0;"><option value="执行单">执行单</option><option value="合同">合同</option></select></td>'
+						+'<td style="width: 140px;">合同编号/执行单号：</td>'
+						+'<td style="width: 145px;"><input id="number-collection" type="text" class="in1" style="width: 140px;padding: 0; value=""></td>'
+						+'<td></td>'
+						+'</tr>'
+						+'<tr>'
+						+'<td style="width: 65px;">直客客户：</td>'
+						+'<td style="width: 145px;"><input id="straightCustomerName-collection" type="text" class="in1" style="width: 140px;padding: 0; value=""></td>'
+						+'<td style="width: 140px;">渠道客户：</td>'
+						+'<td style="width: 145px;"><input id="agentName-collection" type="text" class="in1" style="width: 140px;padding: 0; value=""></td>'
+						+'<td><input type="button" id="search-button-collection" value="查询" class="search-dialog-btn1"/></td>'
+						+'</tr>'
+						+'</table>'
+						+'</div>');
+				$('body').append(dialogDiv);
+			}
+			//render dialog
+			$('#search-dialog-collection').dialog({
+//				show: "drop",
+				draggable:false,
+				resizable:false,
+				width: 'auto',
+				title: '查询',
+				autoOpen: false
+			});
+			
+			//initial params
+			
+			$('#switch-collection').change(function() {
+				var selectedValue=$(this).children('option:selected').val();
+				if(selectedValue=='执行单') {
+					$("#search-result-collection").jqGrid('setGridParam', { url: params.projectUrl }).trigger("reloadGrid");
+				} else {
+					$("#search-result-collection").jqGrid('setGridParam', { url: params.contractUrl }).trigger("reloadGrid");
+				}
+			});
+		};
+		init();
+		
+		//bind dialog button
+		$(this).unbind('click').bind('click', function(){
+			createGridDiv();
+			bindGrid($(this));
+			//bind search button
+			$('#search-button-collection').unbind('click').bind('click',function(){
+				$('#search-result-collection').trigger('reloadGrid');
+			});
+			
+			//clear fields
+			
+			//open dialog
+			if($('#search-dialog-collection').dialog('isOpen')){
+				$('#search-dialog-collection').dialog('close');
+			}
+			$('#search-dialog-collection').dialog("option","position",[$(window).width()/2 - 910/2-175/2,$(window).scrollTop() + $(window).height() / 2 - 440/2-65/2]);
+			$('#search-dialog-collection').dialog('option', 'title', params.title);
+			$('#search-dialog-collection').dialog('open');
+		});
+		
+	};
+    
+    
+})(jQuery);

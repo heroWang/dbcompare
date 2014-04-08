@@ -1,0 +1,494 @@
+/**
+ * @author xinsong
+ */
+;(function ($, undefined) {
+    $.fn.defDatePicker = function (option, arg) {
+        if (option == 'getDate') {
+            return $.map(this, function (v, i) {
+                return init(v, option, arg);
+            });
+        } else if (option == 'getNowDate') {
+            return init(this[0], option, arg);
+        } else {
+            return $.each(this, function (i, v) {
+                init(v, option, arg);
+            });
+        }
+    };
+    function init(el, option, arg) {
+        var now,
+            datePicker = {
+                option: {
+                    flat: true,
+                    mode: 'multiple',
+                    showButtonPanel: false,
+                    dateFormat:'yyyy-MM-dd',
+                    minDate:'',
+                    maxDate:''
+                },
+                _draw: function () {
+                    var dateWrap = $('<div class="date-picker-container" style="width:250px;border:2px solid #dddddd;"></div>'),
+                        dateTableWrap = $('<div class="date-picker-table-container" style="padding:5px;"></div>').appendTo(dateWrap),
+                        dateTable = $('<table style="text-align:center;border-collapse:collapse;width:240px;height:160px;"></table>').appendTo(dateTableWrap),
+                        dateHead = $('<thead><tr style="background-color:#dddddd;"><th class="date-prev" defmonth="month" style="padding:3px;"><a href="javascript:void(0)" style="color:#000;"><span>◀</span></a></th><th colspan="5" style="padding:3px;" class="date-picker-month"><a href="javascript:void(0)" style="color:#000;"><span></span></a></th><th class="date-next" style="padding:3px;" defmonth="month"><a href="javascript:void(0)" style="color:#000;"><span>▶</span></a></th></tr>'
+                            +'<tr class="date-days"><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th><th>日</th></tr></thead>').appendTo(dateTable),
+                        dateBodyDays = $('<tbody class="date-picker-days"></tbody>').appendTo(dateTable),
+                        dateBodyMonths = $('<tbody class="date-picker-months" style="display:none;"></tbody>').appendTo(dateTable),
+                        dateBodyYears = $('<tbody class="date-picker-years" style="display:none;"></tbody>').appendTo(dateTable),
+                        dateBtn = $('<div class="date-picker-btn" style="height:40px;border-top:1px solid #dddddd;"></div>');
+                    this.datePicker = {
+                        wrap: dateWrap,
+                        table: dateTable,
+                        head: {
+                            dateHead: dateHead,
+                            headText: dateHead.find('.date-picker-month span'),
+                            headToMonth: dateHead.find('.date-picker-month>a'),
+                            headDays: dateHead.find('.date-days'),
+                            headPrev: dateHead.find('.date-prev'),
+                            headNext: dateHead.find('.date-next')
+                        },
+                        bodyDays: dateBodyDays,
+                        bodyMonths: dateBodyMonths,
+                        bodyYears: dateBodyYears,
+                        btn: dateBtn
+                    };
+                    this.now = new Date;
+                    this._init();
+                },
+                dateTmp: {
+                    month: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+                },
+                selectDate: [],
+                selectDateMap: {},
+                _init: function () {
+                    var that = this, offset;
+                    if (this.option.flat) {
+                        if (el.nodeName !== 'DIV') {
+                            return false;
+                        } else {
+                            $(el).empty().append(this.datePicker.wrap);
+                        }
+                    } else {
+                        $(el).click(function () {
+                            offset = $(this).offset();
+                            that.datePicker.wrap
+                                .appendTo(document.body)
+                                .css({
+                                position: 'absolute',
+                                top: offset.top + $(this).height() + 10,
+                                left: offset.left
+                            });
+                        })
+                    }
+                    this.minDate = this.option.minDate;
+                    this.maxDate = this.option.maxDate;
+                    this.fillDays(this.now.getMonth(), this.now.getFullYear());
+                    if ($.type(this.option.buttons) == 'object') {
+                        this._creatBtn();
+                    }
+                    this.bindEvents();
+                },
+                hide: function () {
+                    datePicker.wrap.hide();
+                },
+                show: function () {
+                    datePicker.wrap.show();
+                },
+                bindEvents: function () {
+                    var that = this;
+                    this.datePicker.head.headPrev.click(function () {
+                        that.prevNext(-1, $(this).attr('defmonth'));
+                    });
+                    this.datePicker.head.headNext.click(function () {
+                        that.prevNext(1, $(this).attr('defmonth'));
+                    });
+                    this.datePicker.head.headToMonth.click(function () {
+                        that.headToMonth(that.datePicker.head.headNext.attr('defmonth'));
+                    });
+                    this.datePicker.bodyYears.delegate('a', 'click', function () {
+                        that.fillMonths($(this).attr('defmonth'));
+                    });
+                    this.datePicker.bodyMonths.delegate('a', 'click', function () {
+                        that.fillDays(+($(this).attr('defmonth')), that.nowDate.year);
+                    });
+                    this.datePicker.bodyDays.delegate('a', 'click', function () {
+                        var td = $(this).parent('td'), date = new Date(that.nowDate.year, that.nowDate.month, $(this).attr('defmonth'));
+                        if ($(this).attr('disableDate')) {
+                            return false;
+                        }
+                        if (that.option.onSelect) {
+                            that.option.onSelect.call(el, that.format(date, that.option.dateFormat));
+                        }
+                        if (that.shift) {
+                            that.shiftSelect(date);
+                        }
+                        that.select(date, true);
+                        that.showSelectedAndNow();
+                    });
+                    this.datePicker.bodyDays.delegate('a', 'hover', function (e) {
+                        if (e.type == 'mouseenter') {
+                            $(this).css('color', '#f8d');
+                        } else if (!$(this).attr('disabledate')){
+                            $(this).css('color', '#000');
+                        } else {
+                            $(this).css('color', '#dddddd');
+                        }
+                    })
+                    $(document).bind('keydown keyup', function (e) {
+                        if (e.keyCode == 16) {
+                            e.type == 'keydown' && (that.shift = true);
+                            e.type == 'keyup' && (that.shift = false);
+                        }
+                    });
+                },
+                shiftSelect: function (shiftDate) {
+                    var shift = shiftDate.getDate(), day
+                        , miDays = [], that = this;
+                    if (this.selectDay) {
+                        day = this.selectDay.getDate();
+                        if (shiftDate.getFullYear() == this.selectDay.getFullYear() && shiftDate.getMonth() == this.selectDay.getMonth()) {
+                            if (Math.abs(shift - day) > 1) {
+                                if (day > shift) {
+                                    for (var i = shift + 1; i < day; i++) {
+                                        miDays.push(new Date(shiftDate.getFullYear(), shiftDate.getMonth(), i));
+                                    }
+                                } else {
+                                    for (var h = day + 1; h < shift; h++) {
+                                        miDays.push(new Date(shiftDate.getFullYear(), shiftDate.getMonth(), h));
+                                    }
+                                }
+                                $.each(miDays, function (i, v) {
+                                    that.select(v, false);
+                                });
+                                that.showSelectedAndNow();
+                            }
+                        }
+                    }
+                },
+                _creatBtn: function () {
+                    var btnWrap = $('<div style="float:right;"></div>'),
+                        btn = '<span style="display:inline-block;height:30px;padding:0 5px 0 5px;border:1px solid #dddddd;color:white;cursor:pointer;line-height:30px;margin-right:10px;margin-top:5px;background-color:#0055a2;"></span>';
+                    $.each(this.option.buttons, function (i, v) {
+                        btnWrap.append(
+                            $(btn)
+                                .text(i)
+                                .click(function () {
+                                    v.call(el);
+                                })
+                        );
+                    });
+                    this.datePicker.wrap.append(this.datePicker.btn.append(btnWrap).append('<div style="clear:both;"></div>'));
+                },
+                showSelectedAndNow: function () {
+                    var body = this.datePicker.bodyDays, date, that = this, num;
+                    $.each(body.find('td>a'), function (i, v) {
+                        date = $(this).attr('defmonth');
+                        num = 0;
+                        $.each(that.selectDate, function () {
+                            if (this.getFullYear() == that.nowDate.year
+                                && this.getMonth() == that.nowDate.month
+                                && this.getDate() == date) {
+                                $(v).parent('td').css('background-color', '#e6e6e6');
+                                num++;
+                            } 
+                        });
+                        if (!num) {
+                            $(v).parent('td').css('background-color', '#fff');
+                        }
+                        if (that.now.getFullYear() == that.nowDate.year
+                            && that.now.getMonth() == that.nowDate.month
+                            && that.now.getDate() == date) {
+                            $(v).parent('td').css('border', '1px solid #F8D');
+                        }
+                    });
+                },
+                selectDom: function (td) {
+                    if (td.attr('defmonth')) {
+                        td.css('background-color', '#fff').attr('defmonth', '');
+                    } else {
+                        td.css('background-color', '#e6e6e6').attr('defmonth', 1);
+                    }
+                },
+                select: function (date, isClick) {
+                    var dateString, dateArray = [];
+                    if (date === false) {
+                            this.selectDateMap = {};
+                            this.selectDay = false;
+                    } else {
+                        dateString = this.format(date, 'yyyy-MM-dd');
+                        if (this.option.mode == 'multiple') {
+                            if (isClick) {
+                                if (!(this.selectDateMap[dateString])) {
+                                    this.selectDateMap[dateString] = date;
+                                    this.selectDay = date;
+                                } else {
+                                    this.selectDateMap[dateString] = false;
+                                    this.selectDay = false;
+                                }
+                            } else {
+                                this.selectDateMap[dateString] = date;
+                            }
+                        } else if (this.option.mode == 'single') {
+                            if (isClick) {
+                                if (!(this.selectDateMap[dateString])) {
+                                    this.selectDateMap = {};
+                                    this.selectDateMap[dateString] = date;
+                                } else {
+                                    this.selectDateMap[dateString] = false;
+                                }
+                            } else {
+                                this.selectDateMap[dateString] = date;
+                            }
+                        }
+                    }
+                    $.each(this.selectDateMap, function (i, v) {
+                        if (v) {
+                            dateArray.push(v);
+                        }
+                    });
+                    this.selectDate = dateArray;
+                },
+                format: function (date, format) {
+                    var o = {
+                         "M+": date.getMonth() + 1, //month
+                         "d+": date.getDate(),    //day
+                         "h+": date.getHours(),   //hour
+                         "m+": date.getMinutes(), //minute
+                         "s+": date.getSeconds(), //second
+                         "q+": Math.floor((date.getMonth() + 3) / 3),  //quarter
+                         "S": date.getMilliseconds() //millisecond
+                         }
+                     if (/(y+)/.test(format)) {
+                         format = format.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
+                     }
+                     for(var k in o){
+                         if(new RegExp("(" + k + ")").test(format)) {
+                             format = format.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k] : ("00"+ o[k]).substr(("" + o[k]).length));
+                         }
+                     }
+                     return format;
+                },
+                headToMonth: function (type) {
+                    var year = this.nowDate.year
+                        , that = this;
+                    switch (type) {
+                        case 'month':
+                            this.fillMonths(year);
+                            break;
+                        case 'year':
+                            this.fillYears(year);
+                            break;
+                    }
+                },
+                prevNext: function (n, type) {
+                    var year = this.nowDate.year
+                        , month = this.nowDate.month
+                        , that = this;
+                    switch (type) {
+                        case 'month':
+                            if ((month + n) >= 0 && (month + n) <= 11) {
+                                that.fillDays(month + n, year);
+                            } else if (n > 0) {
+                                that.fillDays(0, +(year) + 1);
+                            } else {
+                                that.fillDays(11, +(year) - 1);
+                            }
+                            break;
+                        case 'year':
+                            that.fillMonths(+(year) + n);
+                            break;
+                        case 'years':
+                            that.fillYears(+(year) + n * 9);
+                    }
+                },
+                prevNextAttr: function (type) {
+                    this.datePicker.head.headPrev.attr('defmonth', type);
+                    this.datePicker.head.headNext.attr('defmonth', type);
+                },
+                fillYears: function (y) {
+                    var body = this.datePicker.bodyYears, that = this;
+                    this.datePicker.head.headText.text((y - 4) + '-' + (y + 4));
+                    this.datePicker.bodyMonths.hide();
+                    this.prevNextAttr('years');
+                    this.nowDate.year = (+y);
+                    body.empty().show();
+                    for (i = 0; i < 3; i++) {
+                        body.append('<tr><td></td><td></td><td><a style="color:#000;" href="javascript:void(0)" defmonth="' + (i*3 + 0 + y - 4) + '"><span>' + (i*3 + 0 + y - 4) + '</span></a></td><td><a href="javascript:void(0)" style="color:#000;" defmonth="' + (i*3 + 1 + y - 4) + '"><span>' + (i*3 + 1 + y - 4) + '</span></a></td><td><a href="javascript:void(0)" style="color:#000;" defmonth="' + (i*3 + 2 + y - 4) + '"><span>' + (i*3 + 2 + y - 4) + '</span></a></td><td></td><td></td></tr>');
+                    }
+                },
+                fillMonths: function (y) {
+                    var month = this.nowDate.month, year = this.nowDate.year
+                        , trTmp, body = this.datePicker.bodyMonths
+                        , tr = 0;
+                    this.datePicker.head.headText.text(y);
+                    this.datePicker.head.headDays.hide();
+                    this.datePicker.bodyDays.hide();
+                    this.datePicker.bodyYears.hide();
+                    this.nowDate.year = (+y);
+                    this.prevNextAttr('year');
+                    body.show();
+                    if (!body.find('tr').length) {
+                        for (i = 0; i < 4; i++) {
+                            body.append('<tr><td></td><td></td><td><a href="javascript:void(0)" style="color:#000;" defmonth="' + (i*3 + 0) + '"><span>' + this.dateTmp.month[i*3 + 0] + '</span></a></td><td><a href="javascript:void(0)" style="color:#000;" defmonth="' + (i*3 + 1) + '"><span>' + this.dateTmp.month[i*3 + 1] + '</span></a></td><td><a href="javascript:void(0)" style="color:#000;" defmonth="' + (i*3 + 2) + '"><span>' + this.dateTmp.month[i*3 + 2] + '</span></a></td><td></td><td></td></tr>');
+                        }
+                    }
+                },
+                fillDays: function (m, y) {
+                    var month = this.dateTmp.month[m]
+                        , daysNum = new Date(y, m + 1, 0).getDate()
+                        , oneDay = new Date(y, m, 1).getDay() || 7
+                        , tr = 0
+                        , trTmp
+                        , body = this.datePicker.bodyDays
+                        , day;
+                    this.datePicker.head.headText.text(month + ',' + y);
+                    this.nowDate = {
+                        month: m,
+                        year: y
+                    };
+                    this.prevNextAttr('month');
+                    this.datePicker.bodyMonths.hide();
+                    body.empty().show();
+                    this.datePicker.head.headDays.show();
+                    for (var i = 0; i < daysNum; i++) {
+                        if (tr % 7 == 0) {
+                            if (tr !== 0) {
+                                body.append(trTmp);
+                            }
+                            trTmp = $('<tr></tr>');
+                        }
+                        if (i == 0) {
+                            tr += oneDay - 1;
+                            for (var h = 0; h < oneDay - 1; h++) {
+                                trTmp.append('<td></td>');
+                            }
+                        }
+                        tr += 1;
+                        day = $('<a href="javascript:void(0)" style="color:#000;" defmonth="' + (i + 1) + '"><span style="display:inline-block;width:32px;height:20px;">' + (i+1) + '</span></a>');
+                        this.disableDay(day);
+                        trTmp.append($('<td></td>').append(day));
+                        if (i == daysNum - 1) {
+                            body.append(trTmp);
+                        }
+                    }
+                    this.showSelectedAndNow();
+                },
+                disableDay: function (day) {
+                    var min = this.minDate, max = this.maxDate;
+                    if (!min && !max) {
+                        return false;
+                    } else if (min && !max){
+                        if (this.nowDate.year == min.getFullYear() && this.nowDate.month == min.getMonth() && (+day.attr('defmonth')) == min.getDate()) {
+                            return false;
+                        } else if (new Date(this.nowDate.year, this.nowDate.month, (+day.attr('defmonth'))).getTime() < min.getTime()) {
+                            this.disableDom(day)
+                        }
+                    } else if (max && !min) {
+                        if (this.nowDate.year == max.getFullYear() && this.nowDate.month == max.getMonth() && (+day.attr('defmonth')) == max.getDate()) {
+                            return false;
+                        } else if (new Date(this.nowDate.year, this.nowDate.month, (+day.attr('defmonth'))).getTime() > max.getTime()) {
+                            this.disableDom(day)
+                        }
+                    } else if (min && max) {
+                        if (max.getTime() > min.getTime()) {
+                            if (this.nowDate.year == max.getFullYear() && this.nowDate.month == max.getMonth() && (+day.attr('defmonth')) == max.getDate()) {
+                                return false;
+                            } else if (new Date(this.nowDate.year, this.nowDate.month, (+day.attr('defmonth'))).getTime() > max.getTime()) {
+                                this.disableDom(day)
+                            }
+                            if (this.nowDate.year == min.getFullYear() && this.nowDate.month == min.getMonth() && (+day.attr('defmonth')) == min.getDate()) {
+                                return false;
+                            } else if (new Date(this.nowDate.year, this.nowDate.month, (+day.attr('defmonth'))).getTime() < min.getTime()) {
+                                this.disableDom(day)
+                            }
+                        }
+                    }
+                },
+                disableDom: function (day) {
+                    day.attr('disableDate', true).css('color', '#dddddd');
+                }
+            },
+            InstanceOp = {
+                init: function () {
+                    if (!(datePicker = $(el).data('defDatePicker'))) {
+                        return false;
+                    } else {
+                        this.instance = datePicker;
+                        this.datePicker = datePicker.datePicker;
+                    }
+                },
+                getDate: function (format) {
+                    var instance = this.instance;
+                    return $.map(instance.selectDate, function (v, i) {
+                        return format ? instance.format(v, format) : v;
+                    });
+                },
+                getNowDate: function () {
+                    var instance = this.instance;
+                    return {
+                        year: instance.nowDate.year,
+                        month: instance.nowDate.month
+                    };
+                },
+                setDate: function (datelist) {
+                    var that = this;
+                    $.each(datelist, function (i, v) {
+                        that.instance.select(v, false);
+                    });
+                    that.instance.showSelectedAndNow();
+                },
+                toMonth: function (month) {
+                    this.instance.fillDays(month.month - 1, month.year);
+                },
+                refresh: function () {
+                    this.instance.select(false, false);
+                    this.instance.showSelectedAndNow();
+                },
+                minDate: function (date) {
+                    this.instance.minDate = date;
+                    this.instance.fillDays(this.instance.nowDate.month, this.instance.nowDate.year);
+                },
+                maxDate: function (date) {
+                    this.instance.maxDate = date;
+                    this.instance.fillDays(this.instance.nowDate.month, this.instance.nowDate.year);
+                }
+            };
+        if ($.type(option) == 'string') {
+            InstanceOp.init();
+            switch (option) {
+                case 'getDate':
+                    return InstanceOp.getDate(arg);
+                case 'getNowDate':
+                    return InstanceOp.getNowDate();
+                case 'setDate':
+                    InstanceOp.setDate(arg);
+                    break;
+                case 'toMonth':
+                    InstanceOp.toMonth(arg);
+                    break;
+                case 'refresh':
+                    InstanceOp.refresh();
+                    break;
+                case 'hide':
+                    InstanceOp.hide();
+                    break;
+                case 'show':
+                    InstanceOp.show();
+                    break;
+                case 'minDate':
+                    InstanceOp.minDate(arg);
+                    break;
+                case 'maxDate':
+                    InstanceOp.maxDate(arg);
+                    break;
+            }
+        } else {
+            if ($.type(option) == 'undefined') {
+                option = {};
+            }
+            $.extend(datePicker.option, option);
+            datePicker._draw();
+            $(el).data('defDatePicker', datePicker);
+        }
+    }
+})(jQuery);

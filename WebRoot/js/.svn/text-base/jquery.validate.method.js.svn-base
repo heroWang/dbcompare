@@ -1,0 +1,120 @@
+$.validator
+		.setDefaults({
+			errorPlacement : function(error, element) {
+				// $('<br/>').appendTo(element.parent());
+				// error.appendTo(element.parent());
+				var pos = element.offset(), width = element.nextAll(".ico-ser").length ?
+                    40 : element.nextAll("input[type=text]").length ? 120 : 15;
+				var wrap = $("<div style='position:absolute'>")
+				wrap.append(error);
+				element.after(wrap);
+                var adjustAdd = element.nextAll('.ico-add1').length ? 30 : 0;
+				if (wrap.offsetParent().is(document.body)) {
+					wrap.css({
+						top : pos.top + 3,
+						left : pos.left + element.width() + width + adjustAdd
+					});
+				} else {
+					wrap.css({
+						top : pos.top + 3 - wrap.offsetParent().offset().top,
+						left : pos.left + element.width() + width
+								- wrap.offsetParent().offset().left + adjustAdd
+					});
+				}
+			}
+		});
+jQuery.validator.addMethod("byteRangeLength",
+		function(value, element, param) {
+			var length = value.length;
+			for ( var i = 0; i < value.length; i++) {
+				if (value.charCodeAt(i) > 127) {
+					length++;
+				}
+			}
+			return this.optional(element)
+					|| (length >= param[0] && length <= param[1]);
+		}, $.validator.format("请确保输入的值在{0}-{1}个字节之间(一个中文字算2个字节)"));
+// 邮政编码验证
+jQuery.validator.addMethod("isZipCode", function(value, element) {
+	var tel = /^[0-9]{6}$/;
+	return this.optional(element) || (tel.test(value));
+}, "请正确填写您的邮政编码");
+
+// 手机验证
+jQuery.validator.addMethod("isMobile", function(value, element) {
+	var mobile = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
+	return this.optional(element) || mobile.test(value);
+}, "请正确填写您的联系电话");
+
+// 电话验证
+jQuery.validator.addMethod("isTel", function(value, element) {
+	var tel = /^[+]{0,1}(\d){1,3}[ ]?([-]?((\d)|[ ]){1,12})+$/;
+	return this.optional(element) || tel.test(value);
+}, "请正确填写您的联系电话");
+// 数据是否重复
+jQuery.validator.addMethod("isRepeat", function(value, element, param) {
+	var res = false;
+	var value=encodeURIComponent(value); 
+	$.ajax({
+		url : param[0],
+		data : {'val' :value,'id':param[1]},
+		cache : false,
+		async : false,
+		type : 'get',
+		success : function(data) {
+			res = !data.key;
+		}
+	});
+	return this.optional(element) || res;
+}, "数据已存在!");
+// 数据是否为大于0的金额
+jQuery.validator.addMethod("isAmount", function(value, element) {
+	var re = /^(([1-9]{1}\d*)|([0]{1}))(\.(\d){1,2})?$/;
+	if(re.test(value)) {
+		if(parseFloat(value)<100000000.0) {
+			return this.optional(element) || re.test(value);
+		} else {
+			return false;
+		}
+	}
+	
+}, "金额错误！");
+// 收款批编号格式判断
+jQuery.validator.addMethod("checkbatchnumber", function(value, element) {
+	var l = value.length;
+	if(l<8) {
+		return false;
+	} else {
+		var y = value.substring(0,4);
+		var m = value.substring(4,6);
+		var d = value.substring(6,8);
+		if(parseInt(y)<1000 || parseInt(y)>=3000) {
+			return false;
+		}
+		if(m.charAt(0)=='0') {
+			if(parseInt(m.charAt(1))<1 || parseInt(m.charAt(1))>12) {
+				return false;	
+			}
+		} else {
+			if(parseInt(m)<1 || parseInt(m)>12) {
+				return false;	
+			}
+		}
+		if(d.charAt(0)=='0') {
+			if(parseInt(d.charAt(1))<1 || parseInt(d.charAt(1))>31) {
+				return false;
+			}
+		} else {
+			if(parseInt(d)<1 || parseInt(d)>31) {
+				return false;
+			}
+		}
+	}
+	var myreg = /^\d{4}[0|1]{1}[0-9]{1}[0|1|2|3]{1}[0-9]{1}/;
+	if (value != '') {
+		if (!myreg.test(value)) {
+			return false;
+		}
+	}
+	return true;
+}, "<font color='red'>批编号必须以日期开头，比如20121004-FH！</font>");

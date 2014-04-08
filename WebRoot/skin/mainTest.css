@@ -1,0 +1,38 @@
+@CHARSET "UTF-8";
+
+body, div, dl, dt, dd, ul, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, button, textarea, blockquote {
+    margin: 0;
+    padding: 0;
+}
+body, td, th {
+    font: 12px/1.62 Helvetica,Arial,sans-serif;
+}
+html {
+    color: #111111;
+}
+label{
+	font-family: Tahoma;
+    vertical-align: middle;
+}
+input{
+	margin-right: 3px;
+    vertical-align: middle;
+    font-size:12px;
+}
+input, button, textarea, select, optgroup, option {
+    font-family: inherit;
+    font-size: inherit;
+    font-style: inherit;
+    font-weight: inherit;
+}
+fieldset{
+	margin:0px;
+	padding:0px;
+}
+legend{
+	margin-bottom:20px
+}
+div{
+	margin:20px 10px 0px 0px;
+	border:1px;
+}

@@ -1,0 +1,17 @@
+<config>
+	<source>
+			<user>hawkins</user>
+			<password>hawkins</password>
+			<address>localhost</address>
+			<port>3306</port>
+			<dbname>test</dbname>
+	</source>
+	<target>
+			<user>hawkins</user>
+			<password>hawkins</password>
+			<address>localhost</address>
+			<port>3306</port>
+			<dbname>test</dbname>
+	</target>
+	<include-tables>admin</include-tables>
+</config>

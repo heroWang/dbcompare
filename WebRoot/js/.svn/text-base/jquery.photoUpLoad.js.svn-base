@@ -1,0 +1,103 @@
+/**
+ * @author xin.song
+ */
+//	$(".retry").photoUpLoad({
+//		url : "http://fs1u.dajie.com/upload/upload_work.php",
+//		type : "work_photo",
+//		reg :/(.jpg|.png|.jpeg)$/gi,
+//		callback:"step2",
+//    z-index:999999,
+//		process:function(){
+//			$("#pic-show").hide();
+//			$(".retry").hide();
+//			$(".img-process").show();
+//		},
+//		success : function(ret){
+//			$(".img-process").hide();
+//			$("#img").val(ret);
+//			$("#pic-show").attr("src",ret).show();
+//			$(".retry").show();
+//		}
+//	});
+//@param@ url:上传图片完整地址
+//@param@ type:接口需要的type值
+//@param@ callback:dajie上传图片所限，为避免回调函数命名冲突，可自定义回调全局函数名称
+//@param@ process:用户双击图片后可进行的操作，一般为转菊花
+//@param@ reg:限制图片格式的正则
+//@param@ success:上传成功的回调函数，传入图片地址参数
+//做好的按钮调用photoUpload方法，使按钮点击弹出文件选择框，选中即开始异步上传，在回调函数中传入图片地址。
+(function(){
+	$.fn.extend({
+		photoUpLoad: function(data){
+			var defaultopt = {
+				url:"http://fs3u.dajie.com/upload/upload_cross.php",
+				type:"micro_blog",
+				callback:"UPLOAD_CALLBACK",
+				index: 999999,
+				process:"",
+				reg:/(.jpg|.png|.bmp)$/gi,
+				success : function(ret){
+          alert(ret);
+			  }
+			};
+			var data = $.extend(defaultopt,data);
+			return $.each(this,function(){
+				var callback = data.callback == "UPLOAD_CALLBACK" ? "UPLOAD_CALLBACK" :"UPLOAD_CALLBACK_"+data.callback;
+				var id = $(this).attr("id") || $(this).attr("class");
+				var addfi = function(){
+					var form = $("<form action='" + data.url + "' method='post' style='position:absolute;top:-999px;left:-999px;' enctype='multipart/form-data' id='imageForm" + id + "' target='imageFrame" + id + "'><input type='file' name='file' class='photoupload-input' id='inputFile" + id + "'><input type='hidden' value='" +callback+ "' name='callback' ><input type='hidden' value='" + data.type + "' name='type' ></form><iframe style='display:none;' name='imageFrame" + id + "' id='J_UploadFrame" + id + "'></iframe>");
+					$(document.body).append(form);
+				}();
+				var input = $("#inputFile" + id), handle = $.browser.msie ? 'propertychange' : 'change';
+				input.css({
+					"height": "20px",
+					"width": "20px",
+					"opacity": 0,
+					"outline": "medium none",
+					"filter": "alpha(opacity = 0)",
+					"cursor": "pointer",
+					"z-index": data.index
+				});
+				$(this).mousemove(function(e){
+					input.offset({
+						"top": e.pageY-8,
+						"left": e.pageX-160
+					})
+				})
+				input.bind(handle, init);
+				function init(){
+					var file = input.get(0).value;
+					if (file != '') {
+						var ext = '',reg = data.reg && data.reg;
+						if (file.length > 3) {
+							ext = file.substr(file.length - 4, file.length);
+						}
+						if (ext == '' || (ext.match(reg) == null && reg)) {
+							alert("请上传正确的图片");
+							init_upload_form();
+						}
+						else {
+							data.process && data.process($("#imageForm" + id));
+						}
+					}
+				};
+				
+				function init_upload_form(){
+					input.unbind(handle);
+					$("#imageForm" + id)[0].reset();
+					input.bind(handle, init);
+				};
+				
+				window[callback] = function(r){
+					if (r.substr(0, 1) == '1') {
+						alert(r.substr(2));
+						init_upload_form();
+					}
+					else {
+						data.success(r);
+					}
+				};
+			})
+		}
+	})
+})();

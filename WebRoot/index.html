@@ -1,0 +1,80 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/public.js"></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.23.custom.min.js"></script>
+<script type="text/javascript" src="js/jquery.dynatree.min.js"></script>
+
+<link type="text/css" rel="stylesheet"
+	href="/skin/dynatree/ui.dynatree.css" />
+
+<title>Exam-Web测试系统</title>
+</head>
+<body>
+	<div style="width: 350px;" id="tree"></div>
+</body>
+<script type="text/javascript">
+	$(function() {
+		// Attach the dynatree widget to an existing <div id="tree"> element
+		// and pass the tree options as an argument to the dynatree() function:
+		$("#tree")
+				.dynatree(
+						{
+							onCreate : function(node, span) {
+								//alert($(node.span).find('img'));
+								//$(node.span).find('a').after($('<img src="/skin/dynatree/equal.png" />'));
+								//node.data.title='<img src="/skin/dynatree/equal.png" />'+node.data.title;
+								//$(node.span).css({'background-image':'/skin/dynatree/equal.png',position:'absolute'})
+							},
+							onPostInit : function(dtnode) {
+								//alert('init');
+								//node.data.title='<img src="/skin/dynatree/equal.png" />'+node.data.title;
+								//$(node.span).find('img').after($('<img src="/skin/dynatree/equal.png" />'));
+							},
+							imagePath : "/skin/dynatree/",
+							children : [ {
+								title : '<img src="/skin/dynatree/diff.png" />'
+										+ 'Tables' + '(Total:10,diff:7,miss:3)',
+								isFolder : false,
+								icon : 'tables.ico',
+								children : [ {
+									title : '<img src="/skin/dynatree/diff.png" />'
+											+ 'admin',
+									icon : 'table.ico',
+								//	isFolder : false,
+									children : [
+											{
+												title : '<img src="/skin/dynatree/diff.png" />'
+														+ 'Columns'
+														+ '(Total:5,miss:3)',
+												icon : 'columns.ico',
+												//isFolder : false,
+												children : [ {
+													title : '<img src="/skin/dynatree/miss.png" />'+
+														'audit',
+													icon : 'column.ico',
+													children:[{title:'dd'}],
+													diffContent : ''//TODO
+												}, {
+													title : '<img src="/skin/dynatree/miss.png" />'+
+													'creator',
+													icon : 'column.ico',
+													diffContent : ''//TODO
+												} ]
+											},
+											{
+												title : '<img src="/skin/dynatree/diff.png" />'
+														+ 'Indexes'
+														+ '(Total:7,diff:7)',
+												icon : 'indexes.ico',
+												//isFolder : false,
+												children:null
+											} ]
+								} ]
+							} ]
+						});
+	});
+</script>
+</html>
